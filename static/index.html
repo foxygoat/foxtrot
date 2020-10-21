@@ -1,104 +1,106 @@
-<!--
-Copyright 2019 Google LLC.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <title>Google App Engine Flexible Environment - Golang Websockets Chat</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta charset="utf-8">
+    <title>Foxtrot</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦊</text></svg>"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8" />
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font: 13px Helvetica, Arial; }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages li { padding: 5px 10px; }
-      #messages li:nth-child(odd) { background: #dedede; }
-      #messages li:last-child { background: #aea; }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      *:focus {
+        outline: none;
+      }
+      html {
+        font-family: Helvetica, Arial;
+        margin: 0 auto;
+        max-width: 32rem;
+      }
+      body {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        justify-content: center;
+        padding: 4rem 1rem;
+      }
+      h1 {
+        font-weight: 400;
+        letter-spacing: 0.5rem;
+      }
       section {
-        background-color: #eee;
-        border: 3px dashed #888; border-radius: 10px;
-        margin: 30px; margin-bottom: 80px;
-        padding: 5px;
+        flex-grow: 1;
+        margin: 2rem 0;
+        overflow: auto;
+        width: 100%;
+      }
+      section p {
+        padding: 0.5rem 0;
+      }
+      form {
+        display: flex;
+        width: 100%;
+      }
+      form input {
+        border: 1px solid #ccc;
+        flex-grow: 1;
+        padding-left: 0.5rem;
+      }
+      form button {
+        background: black;
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
       }
     </style>
   </head>
   <body>
+    <h1>Foxtrot</h1>
 
-    <!-- [START gae_flex_websockets_form] -->
-    <h1>Websockets Chat Demo</h1>
-    
-    <form id="chat-form">
-      <input type="text" id="chat-text" autocomplete="off" placeholder="Enter some text...">
+    <section id="messages"></section>
+
+    <form id="form">
+      <input id="message-input" autocomplete="off" />
       <button type="submit">Send</button>
     </form>
 
-    <section>
-
-      <ul id="messages"></ul>
-    </section>
-
-    <!-- [END gae_flex_websockets_form] -->
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script>
-    // [START gae_flex_websockets_js]
-    $(function() {
-      /* If the main page is served via https, the WebSocket must be served via
-         "wss" (WebSocket Secure) */
-      var scheme = window.location.protocol == "https:" ? 'wss://' : 'ws://';
-      var webSocketUri =  scheme
-                          + window.location.hostname
-                          + (location.port ? ':'+location.port: '')
-                          + '/ws';
+      ;(function () {
+        const scheme = window.location.protocol == "https:" ? "wss://" : "ws://"
+        const port = location.port ? ":" + location.port : ""
+        const webSocketUri = scheme + window.location.hostname + port + "/ws"
 
-      /* Helper to keep an activity log on the page. */
-      function log(text, label) {
-        label = label || 'Status';
-        $('#messages').append(`<li> <strong>${label}</strong>: ${text}`);
-      }
-
-      /* Establish the WebSocket connection and register event handlers. */
-      var websocket = new WebSocket(webSocketUri);
-      websocket.onopen = function() {
-        log('Connected');
-      };
-      websocket.onclose = function() {
-        log('Closed');
-      };
-      websocket.onmessage = function(e) {
-        log(e.data, 'Message received')
-      };
-      websocket.onerror = function(e) {
-        log('Error (see console)');
-        console.log(e);
-      };
-      /* Handle form submission and send a message to the websocket. */
-      $('#chat-form').submit(function(e) {
-        e.preventDefault();
-        var data = $('#chat-text').val();
-        if (data) {
-          websocket.send(data);
-          window.scrollTo(0, document.body.scrollHeight)
-          $('#chat-text').val('');
+        function log(text, label) {
+          const messages = document.getElementById("messages")
+          const p = document.createElement("p")
+          p.innerText = `${new Date().toLocaleTimeString()}: ${text}`
+          messages.append(p)
+          p.scrollIntoView()
         }
-      });
-    });
-    // [END gae_flex_websockets_js]
+
+        const websocket = new WebSocket(webSocketUri)
+        websocket.onopen = () => log("✅ connected")
+        websocket.onclose = () => log("🚫 closed")
+        websocket.onerror = (e) => log(e, "💥 error")
+        websocket.onmessage = (e) => log(e.data)
+
+        const messageInput = document.getElementById("message-input")
+        const form = document.getElementById("form")
+        form.onsubmit = function (e) {
+          e.preventDefault()
+          const data = messageInput.value
+          if (data) {
+            websocket.send(data)
+            messageInput.value = ""
+          }
+        }
+      })()
     </script>
   </body>
 </html>
