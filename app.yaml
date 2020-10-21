@@ -1,4 +1,4 @@
-runtime: go1.11
+runtime: go1.13
 env: flex
 
 # Use only a single instance, so that this local-memory-only chat app will work
