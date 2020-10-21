@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Foxtrot</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦊</text></svg>"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8" />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      *:focus {
+        outline: none;
+      }
+      html {
+        font-family: Helvetica, Arial;
+        margin: 0 auto;
+        max-width: 32rem;
+      }
+      body {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        justify-content: center;
+        padding: 4rem 1rem;
+      }
+      h1 {
+        font-weight: 400;
+        letter-spacing: 0.5rem;
+      }
+      section {
+        flex-grow: 1;
+        margin: 2rem 0;
+        overflow: auto;
+        width: 100%;
+      }
+      section p {
+        padding: 0.5rem 0;
+      }
+      form {
+        display: flex;
+        width: 100%;
+      }
+      form input {
+        border: 1px solid #ccc;
+        flex-grow: 1;
+        padding-left: 0.5rem;
+      }
+      form button {
+        background: black;
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Foxtrot</h1>
+
+    <section id="messages"></section>
+
+    <form id="form">
+      <input id="message-input" autocomplete="off" />
+      <button type="submit">Send</button>
+    </form>
+
+    <script>
+      ;(function () {
+        const scheme = window.location.protocol == "https:" ? "wss://" : "ws://"
+        const port = location.port ? ":" + location.port : ""
+        const webSocketUri = scheme + window.location.hostname + port + "/ws"
+
+        function log(text, label) {
+          const messages = document.getElementById("messages")
+          const p = document.createElement("p")
+          p.innerText = `${new Date().toLocaleTimeString()}: ${text}`
+          messages.append(p)
+          p.scrollIntoView()
+        }
+
+        const websocket = new WebSocket(webSocketUri)
+        websocket.onopen = () => log("✅ connected")
+        websocket.onclose = () => log("🚫 closed")
+        websocket.onerror = (e) => log(e, "💥 error")
+        websocket.onmessage = (e) => log(e.data)
+
+        const messageInput = document.getElementById("message-input")
+        const form = document.getElementById("form")
+        form.onsubmit = function (e) {
+          e.preventDefault()
+          const data = messageInput.value
+          if (data) {
+            websocket.send(data)
+            messageInput.value = ""
+          }
+        }
+      })()
+    </script>
+  </body>
+</html>
