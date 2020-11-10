@@ -15,6 +15,7 @@ func TestSocketHandler(t *testing.T) {
 	dialer := websocket.Dialer{}
 
 	conn, resp, err := dialer.Dial("ws://"+server.Listener.Addr().String()+"/ws", nil)
+	defer resp.Body.Close() //nolint: errcheck
 	require.NoError(t, err)
 	require.Equal(t, http.StatusSwitchingProtocols, resp.StatusCode)
 
