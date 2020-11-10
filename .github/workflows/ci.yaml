@@ -11,4 +11,8 @@ jobs:
     name: CI
     runs-on: ubuntu-latest
     steps:
-    - run: true
+    - uses: actions/setup-go@v2.1.2
+      with:
+        go-version: 1.15
+    - uses: actions/checkout@v2
+    - run: make
