@@ -7,4 +7,5 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/mattn/go-sqlite3 v1.14.4
 	github.com/stretchr/testify v1.6.1
+	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 )
