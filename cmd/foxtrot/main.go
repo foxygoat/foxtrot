@@ -35,7 +35,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("upgrader.Upgrade: %v", err)
 		return
 	}
-	defer conn.Close()
+	defer conn.Close() //nolint: errcheck
 
 	for {
 		messageType, p, err := conn.ReadMessage()
