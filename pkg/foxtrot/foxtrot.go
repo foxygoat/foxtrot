@@ -12,6 +12,7 @@ type User struct {
 
 	passwordHash string
 	avatar       []byte
+	jwt          string
 }
 
 // Room is a chat room identified by its name.

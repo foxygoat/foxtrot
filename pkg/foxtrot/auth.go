@@ -3,6 +3,7 @@ package foxtrot
 import (
 	"context"
 	"errors"
+	"time"
 
 	"foxygo.at/s/errs"
 	"golang.org/x/crypto/bcrypt"
@@ -14,7 +15,8 @@ var (
 )
 
 type authenticator struct {
-	db *db
+	db     *db
+	secret []byte
 }
 
 func (a *authenticator) register(ctx context.Context, u *User, password string) error {
@@ -23,7 +25,11 @@ func (a *authenticator) register(ctx context.Context, u *User, password string) 
 		return errs.New(errPasswordHash, err)
 	}
 	u.passwordHash = string(hashWithSalt)
-	return a.db.createUser(ctx, u)
+	if err := a.db.createUser(ctx, u); err != nil {
+		return err
+	}
+	u.jwt = a.newJWT(u.Name)
+	return nil
 }
 
 func (a *authenticator) login(ctx context.Context, name, password string) (*User, error) {
@@ -35,5 +41,16 @@ func (a *authenticator) login(ctx context.Context, name, password string) (*User
 	if err := bcrypt.CompareHashAndPassword([]byte(u.passwordHash), []byte(password)); err != nil {
 		return nil, errs.New(errAuth, err)
 	}
+	u.jwt = a.newJWT(u.Name)
 	return u, nil
+}
+
+func (a *authenticator) newJWT(sub string) string {
+	// Arbitrarily chosen expiry of three months
+	exp := time.Now().AddDate(0, 3, 0).Unix()
+	return newJWT(sub, exp, a.secret)
+}
+
+func (a *authenticator) validateJWT(jwt string) error {
+	return validateJWT(jwt, a.secret)
 }
