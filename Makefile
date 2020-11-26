@@ -64,6 +64,11 @@ lint-with-docker:  ## Lint source code with docker image of golangci-lint
 
 .PHONY: lint lint-with-local lint-with-docker
 
+# --- Docker -------------------------------------------------------------------
+
+docker-build:
+	docker build --tag foxtrot:latest .
+
 # --- Utilities ----------------------------------------------------------------
 COLOUR_NORMAL = $(shell tput sgr0 2>/dev/null)
 COLOUR_RED    = $(shell tput setaf 1 2>/dev/null)
