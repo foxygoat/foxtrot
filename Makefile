@@ -65,9 +65,19 @@ lint-with-docker:  ## Lint source code with docker image of golangci-lint
 .PHONY: lint lint-with-local lint-with-docker
 
 # --- Docker -------------------------------------------------------------------
+DOCKER_TAG ?= $(error DOCKER_TAG not set)
 
 docker-build:
 	docker build --tag foxtrot:latest .
+
+docker-build-release:
+	docker buildx build \
+		--push \
+		--tag foxygoat/foxtrot:latest \
+		--tag foxygoat/foxtrot:$(DOCKER_TAG) \
+		--platform linux/amd64,linux/arm/v7 .
+
+.PHONY: docker-build docker-build-release
 
 # --- Utilities ----------------------------------------------------------------
 COLOUR_NORMAL = $(shell tput sgr0 2>/dev/null)
