@@ -1,6 +1,6 @@
 # --- Global -------------------------------------------------------------------
 O = out
-COVERAGE = 83
+COVERAGE = 91
 
 all: build test check-coverage lint  ## build, test, check coverage and lint
 	@if [ -e .git/rebase-merge ]; then git --no-pager log -1 --pretty='%h %s'; fi
@@ -79,6 +79,14 @@ docker-build-release:
 		--tag foxygoat/foxtrot:latest \
 		--tag foxygoat/foxtrot:$(DOCKER_TAG) \
 		--platform linux/amd64,linux/arm/v7 .
+
+docker-run: docker-build
+	docker run --rm -it -p8080:8080 foxtrot:latest
+
+docker-test: docker-build
+	docker run --rm --detach -p8083:8080 --name foxtrot-test foxtrot:latest
+	go test ./pkg/foxtrot --api-base-url http://localhost:8083
+	docker kill foxtrot-test
 
 .PHONY: docker-build docker-build-release
 
