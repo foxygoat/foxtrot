@@ -1,6 +1,6 @@
 # --- Global -------------------------------------------------------------------
 O = out
-COVERAGE = 85.4
+COVERAGE = 85
 
 all: build test check-coverage lint  ## build, test, check coverage and lint
 	@if [ -e .git/rebase-merge ]; then git --no-pager log -1 --pretty='%h %s'; fi
@@ -13,10 +13,10 @@ clean::  ## Remove generated files
 
 # --- Build --------------------------------------------------------------------
 
-build: pkg/foxtrot/schema.go | $(O)  ## Build binaries of directories in ./cmd to out/
+build: pkg/foxtrot/schema.go pkg/foxtrot/sample_data.go | $(O)  ## Build binaries of directories in ./cmd to out/
 	go build -o $(O) ./cmd/...
 
-install:  ## Build and install binaries in $GOBIN or $GOPATH/bin
+install: pkg/foxtrot/schema.go pkg/foxtrot/sample_data.go  ## Build and install binaries in $GOBIN or $GOPATH/bin
 	go install ./cmd/...
 
 run: build  ## Run foxtrot server
@@ -24,6 +24,9 @@ run: build  ## Run foxtrot server
 
 pkg/foxtrot/schema.go: sql/schema.sql
 	@printf '//generated DO NOT EDIT\n\npackage foxtrot\n\nconst schema = `%s`\n' "$$(cat $<)" > $@
+
+pkg/foxtrot/sample_data.go: sql/sample_data.sql
+	@printf '//generated DO NOT EDIT\n\npackage foxtrot\n\nconst sampleData = `%s`\n' "$$(cat $<)" > $@
 
 .PHONY: build install run
 

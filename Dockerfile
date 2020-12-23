@@ -4,6 +4,7 @@ WORKDIR /src
 COPY go.mod go.sum Makefile ./
 COPY pkg pkg/
 COPY cmd cmd/
+COPY sql sql/
 RUN apk add make
 RUN make install
 

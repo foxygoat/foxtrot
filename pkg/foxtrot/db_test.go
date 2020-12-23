@@ -129,10 +129,10 @@ func TestCreateQueryMessageSimple(t *testing.T) {
 	require.NoError(t, err)
 	require.WithinDuration(t, time.Now(), createdAt, time.Second)
 
-	want := &Message{ID: 1, Content: "hi", Room: "kitchen", Author: "alice", CreatedAt: got.CreatedAt}
+	want := &Message{ID: 101, Content: "hi", Room: "kitchen", Author: "alice", CreatedAt: got.CreatedAt}
 	require.Equal(t, want, got)
 
-	messages, err = db.queryMessages(ctx, "kitchen", 10, -1)
+	messages, err = db.queryMessages(ctx, "kitchen", 110, -1)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(messages))
 	require.Equal(t, want, messages[0])
@@ -142,7 +142,7 @@ func TestCreateQueryMessageSimple(t *testing.T) {
 	require.Equal(t, 1, len(messages))
 	require.Equal(t, want, messages[0])
 
-	messages, err = db.queryMessages(ctx, "kitchen", 10, 10)
+	messages, err = db.queryMessages(ctx, "kitchen", 110, 10)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(messages))
 	require.Equal(t, want, messages[0])
@@ -174,7 +174,7 @@ func TestCreateQueryMessage(t *testing.T) {
 	require.Equal(t, "hungry?", got[0].Content)
 	require.Equal(t, "hi", got[1].Content)
 
-	got, err = db.queryMessages(ctx, "shed", 2, -1)
+	got, err = db.queryMessages(ctx, "shed", 102, -1)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(got))
 	require.Equal(t, "ouch", got[0].Content)

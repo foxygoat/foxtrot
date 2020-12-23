@@ -52,6 +52,9 @@ func (db *db) setupSchema() error {
 	if _, err := db.conn.Exec(schema); err != nil {
 		return errs.New(errDBInitialisation, err)
 	}
+	if _, err := db.conn.Exec(sampleData); err != nil {
+		return errs.New(errDBInitialisation, err)
+	}
 	return nil
 }
 
