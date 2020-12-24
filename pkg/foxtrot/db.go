@@ -69,7 +69,7 @@ func (db *db) getUser(ctx context.Context, name string) (*User, error) {
 }
 
 func (db *db) createUser(ctx context.Context, u *User) error {
-	stmt := "INSERT INTO users(name, password_hash, avatar) VALUES( ?, ?, ? )"
+	stmt := "INSERT INTO users(name, password_hash, avatar) VALUES (?, ?, ?)"
 	if _, err := db.conn.ExecContext(ctx, stmt, u.Name, u.passwordHash, u.avatar); err != nil {
 		return fmt.Errorf("db: cannot create user '%s': %w", u.Name, err)
 	}
@@ -87,7 +87,7 @@ func (db *db) getRoom(ctx context.Context, name string) (*Room, error) {
 }
 
 func (db *db) createRoom(ctx context.Context, r *Room) error {
-	stmt := "INSERT INTO rooms(name) VALUES( ? )"
+	stmt := "INSERT INTO rooms(name) VALUES (?)"
 	if _, err := db.conn.ExecContext(ctx, stmt, r.Name); err != nil {
 		return fmt.Errorf("db: cannot create room '%s': %w", r.Name, err)
 	}
@@ -135,7 +135,7 @@ func rowsToMessages(rows *sql.Rows) ([]*Message, error) {
 }
 
 func (db *db) createMessage(ctx context.Context, m *Message) error {
-	stmt := "INSERT INTO messages(content, created_at, room, author) VALUES( ?, ?, ?, ? )"
+	stmt := "INSERT INTO messages(content, created_at, room, author) VALUES (?, ?, ?, ?)"
 	if _, err := db.conn.ExecContext(ctx, stmt, m.Content, m.CreatedAt, m.Room, m.Author); err != nil {
 		return fmt.Errorf("db: cannot create message '%#v': %w", m, err)
 	}
