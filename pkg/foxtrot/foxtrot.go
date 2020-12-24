@@ -9,10 +9,10 @@ import "time"
 type User struct {
 	Name      string `json:"name"`
 	AvatarURL string `json:"avatarURL,omitempty"`
+	JWT       string `json:"jwt,omitempty"`
 
 	passwordHash string
 	avatar       []byte
-	jwt          string
 }
 
 // Room is a chat room identified by its name.

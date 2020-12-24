@@ -18,10 +18,10 @@ func TestRegisterLogin(t *testing.T) {
 	require.NoError(t, err)
 
 	u2, err := a.login(context.Background(), "Alice", "Pa$$w0rd")
-	u.jwt = u2.jwt
+	u.JWT = u2.JWT
 	require.NoError(t, err)
 	require.Equal(t, u, u2)
-	require.NoError(t, a.validateJWT(u.jwt))
+	require.NoError(t, a.validateJWT(u.JWT))
 
 	_, err = a.login(context.Background(), "Alice", "WRONG-PASS")
 	require.Error(t, err)
