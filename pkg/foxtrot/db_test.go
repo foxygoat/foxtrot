@@ -2,7 +2,6 @@ package foxtrot
 
 import (
 	"context"
-	"errors"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -36,7 +35,7 @@ func TestSchemaSetup(t *testing.T) {
 
 	_, err = newDB(dsn)
 	require.Error(t, err)
-	require.Truef(t, errors.Is(err, errDBInitialisation), "want %v, got %v", errDBInitialisation, err)
+	requireErrIs(t, err, errDBInitialisation)
 }
 
 func mustDB() *db {
@@ -66,6 +65,7 @@ func TestGetUserErr(t *testing.T) {
 
 	_, err := db.getUser(context.Background(), "MISSING")
 	require.Error(t, err)
+	requireErrIs(t, err, errDBNotFound)
 }
 
 func TestCreateUserErr(t *testing.T) {
@@ -184,6 +184,10 @@ func TestCreateQueryMessage(t *testing.T) {
 	require.Equal(t, 2, len(got))
 	require.Equal(t, "🍪🧁", got[0].Content)
 	require.Equal(t, "ouch", got[1].Content)
+
+	got, err = db.queryMessages(ctx, "MISING-ROOM", -1, 2)
+	require.NoError(t, err)
+	require.Equal(t, 0, len(got))
 }
 
 func TestCreateMessageErr(t *testing.T) {

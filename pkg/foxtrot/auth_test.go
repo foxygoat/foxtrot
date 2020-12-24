@@ -2,7 +2,6 @@ package foxtrot
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -26,7 +25,7 @@ func TestRegisterLogin(t *testing.T) {
 
 	_, err = a.login(context.Background(), "Alice", "WRONG-PASS")
 	require.Error(t, err)
-	require.Truef(t, errors.Is(err, errAuth), "want errAuth, got %v", err)
+	requireErrIs(t, err, errAuth)
 }
 
 func TestRegisterErr(t *testing.T) {
@@ -51,5 +50,5 @@ func TestLoginErr(t *testing.T) {
 	a := authenticator{db: db}
 	_, err := a.login(context.Background(), "Alice", "Pa$$w0rd")
 	require.Error(t, err) // missing user
-	require.Truef(t, errors.Is(err, errAuth), "want errAuth, got %v", err)
+	requireErrIs(t, err, errAuth)
 }

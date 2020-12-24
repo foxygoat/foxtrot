@@ -36,7 +36,10 @@ func (a *authenticator) login(ctx context.Context, name, password string) (*User
 	u, err := a.db.getUser(ctx, name)
 	if err != nil {
 		_ = bcrypt.CompareHashAndPassword([]byte(""), []byte(password))
-		return nil, errs.New(errAuth, err)
+		if errors.Is(err, errDBNotFound) {
+			return nil, errs.New(errAuth, err)
+		}
+		return nil, err
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(u.passwordHash), []byte(password)); err != nil {
 		return nil, errs.New(errAuth, err)
