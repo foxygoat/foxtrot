@@ -13,20 +13,14 @@ clean::  ## Remove generated files
 
 # --- Build --------------------------------------------------------------------
 
-build: pkg/foxtrot/schema.go pkg/foxtrot/sample_data.go | $(O)  ## Build binaries of directories in ./cmd to out/
+build: | $(O)  ## Build binaries of directories in ./cmd to out/
 	go build -o $(O) ./cmd/...
 
-install: pkg/foxtrot/schema.go pkg/foxtrot/sample_data.go  ## Build and install binaries in $GOBIN or $GOPATH/bin
+install:  ## Build and install binaries in $GOBIN or $GOPATH/bin
 	go install ./cmd/...
 
 run: build  ## Run foxtrot server
 	$(O)/foxtrot
-
-pkg/foxtrot/schema.go: sql/schema.sql
-	@printf '//generated DO NOT EDIT\n\npackage foxtrot\n\nconst schema = `%s`\n' "$$(cat $<)" > $@
-
-pkg/foxtrot/sample_data.go: sql/sample_data.sql
-	@printf '//generated DO NOT EDIT\n\npackage foxtrot\n\nconst sampleData = `%s`\n' "$$(cat $<)" > $@
 
 .PHONY: build install run
 

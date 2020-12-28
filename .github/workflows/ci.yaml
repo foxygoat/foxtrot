@@ -13,7 +13,8 @@ jobs:
     steps:
     - uses: actions/setup-go@v2
       with:
-        go-version: 1.15
+        stable: false
+        go-version: 1.16.0-beta1
     - uses: actions/checkout@v2
     # Install golangci-lint, but run with --version so it does not run.
     # We run it from the Makefile ourselves. It is installed so it does
