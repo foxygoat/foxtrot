@@ -88,6 +88,22 @@ func (db *db) createUser(ctx context.Context, u *User) error {
 	return nil
 }
 
+func (db *db) deleteUser(ctx context.Context, name string) error {
+	stmt := "DELETE FROM users WHERE name = ?"
+	result, err := db.conn.ExecContext(ctx, stmt, name)
+	if err != nil {
+		return errs.Errorf("%v: cannot delete user '%s': %v", errDBInternal, name, err)
+	}
+	cnt, err := result.RowsAffected()
+	if err != nil {
+		return errs.Errorf("%v: cannot confirm deletion of user '%s': %v", errDBInternal, name, err)
+	}
+	if cnt == 0 {
+		return errs.Errorf("%v: cannot delete user '%s'", errDBNotFound, name)
+	}
+	return nil
+}
+
 func (db *db) getRoom(ctx context.Context, name string) (*Room, error) {
 	r := Room{Name: name}
 	stmt := "SELECT name FROM rooms WHERE name = ?"

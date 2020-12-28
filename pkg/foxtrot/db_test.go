@@ -46,7 +46,7 @@ func mustDB() *db {
 	return db
 }
 
-func TestCreateGetUser(t *testing.T) {
+func TestCreateGetDeleteUser(t *testing.T) {
 	db := mustDB()
 	defer db.close()
 
@@ -57,6 +57,13 @@ func TestCreateGetUser(t *testing.T) {
 	u2, err := db.getUser(context.Background(), "alice")
 	require.NoError(t, err)
 	require.Equal(t, u, u2)
+
+	err = db.deleteUser(context.Background(), "alice")
+	require.NoError(t, err)
+
+	_, err = db.getUser(context.Background(), "alice")
+	require.Error(t, err)
+	requireErrIs(t, err, errDBNotFound)
 }
 
 func TestGetUserErr(t *testing.T) {
@@ -77,6 +84,15 @@ func TestCreateUserErr(t *testing.T) {
 
 	err = db.createUser(context.Background(), &User{passwordHash: "##"})
 	require.Error(t, err) // missing name
+}
+
+func TestDeleteUserErr(t *testing.T) {
+	db := mustDB()
+	defer db.close()
+
+	err := db.deleteUser(context.Background(), "MISSING")
+	require.Error(t, err)
+	requireErrIs(t, err, errDBNotFound)
 }
 
 func TestCreateGetRoom(t *testing.T) {
