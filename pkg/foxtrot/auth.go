@@ -28,7 +28,7 @@ func (a *authenticator) register(ctx context.Context, u *User, password string) 
 	if err := a.db.createUser(ctx, u); err != nil {
 		return err
 	}
-	u.jwt = a.newJWT(u.Name)
+	u.JWT = a.newJWT(u.Name)
 	return nil
 }
 
@@ -36,12 +36,15 @@ func (a *authenticator) login(ctx context.Context, name, password string) (*User
 	u, err := a.db.getUser(ctx, name)
 	if err != nil {
 		_ = bcrypt.CompareHashAndPassword([]byte(""), []byte(password))
-		return nil, errs.New(errAuth, err)
+		if errors.Is(err, errDBNotFound) {
+			return nil, errs.New(errAuth, err)
+		}
+		return nil, err
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(u.passwordHash), []byte(password)); err != nil {
 		return nil, errs.New(errAuth, err)
 	}
-	u.jwt = a.newJWT(u.Name)
+	u.JWT = a.newJWT(u.Name)
 	return u, nil
 }
 

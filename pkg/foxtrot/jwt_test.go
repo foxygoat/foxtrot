@@ -2,7 +2,6 @@ package foxtrot
 
 import (
 	"encoding/base64"
-	"errors"
 	"testing"
 	"time"
 
@@ -57,5 +56,5 @@ func TestValidateJWT(t *testing.T) {
 func errIs(t *testing.T, err, targetErr error) {
 	t.Helper()
 	require.Error(t, err)
-	require.Truef(t, errors.Is(err, targetErr), `"%v" does not wrap "%v"`, err, targetErr)
+	requireErrIs(t, err, targetErr)
 }

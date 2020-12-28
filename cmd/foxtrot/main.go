@@ -3,23 +3,59 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 
+	"foxygo.at/foxtrot/pkg/foxtrot"
+	"github.com/alecthomas/kong"
 	"github.com/gorilla/websocket"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
-	http.Handle("/", http.FileServer(http.Dir("static")))
-	http.HandleFunc("/ws", socketHandler)
+	cfg := &foxtrot.Config{}
+	kong.Parse(cfg, kong.Description("Foxtrot Server"))
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	log.Printf("Listening on port %s", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	mux := http.NewServeMux()
+	mux.Handle("/", http.FileServer(http.Dir("static")))
+	if _, err := foxtrot.NewApp(cfg, mux); err != nil {
 		log.Fatal(err)
 	}
+
+	port := ":8080"
+	log.Printf("Listening on port %s", port)
+	if err := http.ListenAndServe(port, handler(logHTTP(mux))); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func handler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ws" {
+			socketHandler(w, r)
+		} else {
+			h.ServeHTTP(w, r)
+		}
+	})
+}
+
+func logHTTP(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ww := &responseWriter{
+			ResponseWriter: w,
+			statusCode:     http.StatusOK,
+		}
+		h.ServeHTTP(ww, r)
+		log.Printf("%d %-4s %s %s\n", ww.statusCode, r.Method, r.URL, r.RemoteAddr)
+	})
+}
+
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (w *responseWriter) WriteHeader(code int) {
+	w.statusCode = code
+	w.ResponseWriter.WriteHeader(code)
 }
 
 // upgrader holds the websocket connection.

@@ -1,6 +1,6 @@
 # --- Global -------------------------------------------------------------------
 O = out
-COVERAGE = 85.4
+COVERAGE = 91
 
 all: build test check-coverage lint  ## build, test, check coverage and lint
 	@if [ -e .git/rebase-merge ]; then git --no-pager log -1 --pretty='%h %s'; fi
@@ -13,10 +13,10 @@ clean::  ## Remove generated files
 
 # --- Build --------------------------------------------------------------------
 
-build: pkg/foxtrot/schema.go | $(O)  ## Build binaries of directories in ./cmd to out/
+build: pkg/foxtrot/schema.go pkg/foxtrot/sample_data.go | $(O)  ## Build binaries of directories in ./cmd to out/
 	go build -o $(O) ./cmd/...
 
-install:  ## Build and install binaries in $GOBIN or $GOPATH/bin
+install: pkg/foxtrot/schema.go pkg/foxtrot/sample_data.go  ## Build and install binaries in $GOBIN or $GOPATH/bin
 	go install ./cmd/...
 
 run: build  ## Run foxtrot server
@@ -24,6 +24,9 @@ run: build  ## Run foxtrot server
 
 pkg/foxtrot/schema.go: sql/schema.sql
 	@printf '//generated DO NOT EDIT\n\npackage foxtrot\n\nconst schema = `%s`\n' "$$(cat $<)" > $@
+
+pkg/foxtrot/sample_data.go: sql/sample_data.sql
+	@printf '//generated DO NOT EDIT\n\npackage foxtrot\n\nconst sampleData = `%s`\n' "$$(cat $<)" > $@
 
 .PHONY: build install run
 
@@ -76,6 +79,14 @@ docker-build-release:
 		--tag foxygoat/foxtrot:latest \
 		--tag foxygoat/foxtrot:$(DOCKER_TAG) \
 		--platform linux/amd64,linux/arm/v7 .
+
+docker-run: docker-build
+	docker run --rm -it -p8080:8080 foxtrot:latest
+
+docker-test: docker-build
+	docker run --rm --detach -p8083:8080 --name foxtrot-test foxtrot:latest
+	go test ./pkg/foxtrot --api-base-url http://localhost:8083
+	docker kill foxtrot-test
 
 .PHONY: docker-build docker-build-release
 

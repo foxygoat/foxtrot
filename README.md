@@ -21,5 +21,6 @@ Interactively set up transient in memory DB with
 
     sqlite3
     .read sql/schema.sql
+    .read sql/sample_data.sql
 
 Alternatively use `sqlite3 out/foxtrot.db '.read sql/schema.sql'`.
