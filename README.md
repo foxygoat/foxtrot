@@ -39,6 +39,7 @@ data store or define the authenticator secret.
 Access the foxtrot API server locally with
 
     curl 'localhost:8080/api/history?room=$Kitchen'
+    curl localhost:8080/api/version
 
 ### DB
 

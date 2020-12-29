@@ -16,6 +16,8 @@ jobs:
         stable: false
         go-version: 1.16.0-beta1
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     # Install golangci-lint, but run with --version so it does not run.
     # We run it from the Makefile ourselves. It is installed so it does
     # not depend on the version of Go in the docker image, which the
