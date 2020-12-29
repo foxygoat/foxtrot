@@ -13,20 +13,14 @@ clean::  ## Remove generated files
 
 # --- Build --------------------------------------------------------------------
 
-build: pkg/foxtrot/schema.go pkg/foxtrot/sample_data.go | $(O)  ## Build binaries of directories in ./cmd to out/
+build: | $(O)  ## Build binaries of directories in ./cmd to out/
 	go build -o $(O) ./cmd/...
 
-install: pkg/foxtrot/schema.go pkg/foxtrot/sample_data.go  ## Build and install binaries in $GOBIN or $GOPATH/bin
+install:  ## Build and install binaries in $GOBIN or $GOPATH/bin
 	go install ./cmd/...
 
 run: build  ## Run foxtrot server
 	$(O)/foxtrot
-
-pkg/foxtrot/schema.go: sql/schema.sql
-	@printf '//generated DO NOT EDIT\n\npackage foxtrot\n\nconst schema = `%s`\n' "$$(cat $<)" > $@
-
-pkg/foxtrot/sample_data.go: sql/sample_data.sql
-	@printf '//generated DO NOT EDIT\n\npackage foxtrot\n\nconst sampleData = `%s`\n' "$$(cat $<)" > $@
 
 .PHONY: build install run
 
@@ -48,7 +42,7 @@ FAIL_COVERAGE = { echo '$(COLOUR_RED)FAIL - Coverage below $(COVERAGE)%$(COLOUR_
 .PHONY: check-coverage cover test
 
 # --- Lint ---------------------------------------------------------------------
-GOLINT_VERSION = 1.32.2
+GOLINT_VERSION = 1.33.2
 GOLINT_INSTALLED_VERSION = $(or $(word 4,$(shell golangci-lint --version 2>/dev/null)),0.0.0)
 GOLINT_MIN_VERSION = $(shell printf '%s\n' $(GOLINT_VERSION) $(GOLINT_INSTALLED_VERSION) | sort -V | head -n 1)
 GOPATH1 = $(firstword $(subst :, ,$(GOPATH)))

@@ -13,7 +13,13 @@ jobs:
     steps:
     - uses: actions/setup-go@v2
       with:
-        go-version: 1.15
+        stable: false
+        go-version: 1.16.0-beta1
     - uses: actions/checkout@v2
+    # Install golangci-lint, but run with --version so it does not run.
+    # We run it from the Makefile ourselves. It is installed so it does
+    # not depend on the version of Go in the docker image, which the
+    # Makefile will use if it is not installed.
+    - run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.33.2
     - run: make
     - run: make docker-test

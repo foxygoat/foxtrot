@@ -1,6 +1,6 @@
 module foxygo.at/foxtrot
 
-go 1.13
+go 1.16
 
 require (
 	foxygo.at/s v0.0.39
