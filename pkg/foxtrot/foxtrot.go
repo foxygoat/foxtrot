@@ -13,6 +13,15 @@ import (
 type Config struct {
 	DSN        string `help:"SQLite Data Source Name" default:":memory:"`
 	AuthSecret string `help:"JWT token generation secret. default: <RANDOM_STRING>" env:"FT_AUTH_SECRET"`
+
+	Version Version `kong:"-"`
+}
+
+// Version contains build version information which is returned as JSON
+// at the version HTTP endpoint.
+type Version struct {
+	CommitSha string `json:"commitSha"`
+	Semver    string `json:"semver"`
 }
 
 // NewApp creates a new App struct for given config and wire it with
@@ -31,7 +40,7 @@ func NewApp(cfg *Config, mux *http.ServeMux) (*App, error) {
 		}
 	}
 	auth := &authenticator{db: db, secret: secret}
-	api := newAPI(db, auth)
+	api := newAPI(db, auth, cfg.Version)
 	api.wireRoutes("/api", mux)
 	app := &App{db: db, auth: auth, api: api}
 	return app, nil

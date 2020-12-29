@@ -24,12 +24,20 @@ type APITestSuite struct {
 	server  *httptest.Server
 }
 
+const (
+	testSemver    = "v0.0.0-test"
+	testCommitSha = "123456789abcdef"
+)
+
 func (s *APITestSuite) SetupSuite() {
 	t := s.T()
 	s.baseURL = *apiURLFlag
 	if s.baseURL == "" {
 		mux := http.NewServeMux()
-		cfg := &Config{DSN: ":memory:"}
+		cfg := &Config{
+			DSN:     ":memory:",
+			Version: Version{Semver: testSemver, CommitSha: testCommitSha},
+		}
 		_, err := NewApp(cfg, mux)
 		require.NoError(t, err)
 		s.server = httptest.NewServer(mux)
@@ -131,6 +139,23 @@ func (s *APITestSuite) TestRegister() {
 	relURL = "/api/_test_cleanup"
 	_, status = httpDelete(t, s.baseURL+relURL)
 	require.Equal(t, http.StatusOK, status)
+}
+
+func (s *APITestSuite) TestVersion() {
+	t := s.T()
+	body, status := httpGet(t, s.baseURL+"/api/version")
+	require.Equal(t, http.StatusOK, status)
+	version := Version{}
+	err := json.Unmarshal([]byte(body), &version)
+	require.NoError(t, err, body)
+	require.NotEmpty(t, version.Semver)
+	require.NotEmpty(t, version.CommitSha)
+	require.NotEqual(t, "undefined", version.CommitSha)
+	require.NotEqual(t, "undefined", version.Semver)
+	if s.server != nil {
+		require.Equal(t, testCommitSha, version.CommitSha)
+		require.Equal(t, testSemver, version.Semver)
+	}
 }
 
 func (s *APITestSuite) TestRegisterErr() {

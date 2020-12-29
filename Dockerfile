@@ -1,5 +1,10 @@
 FROM golang:1.16beta1-buster AS builder
 
+ARG COMMIT_SHA
+ARG SEMVER
+ENV COMMIT_SHA=${COMMIT_SHA}
+ENV SEMVER=${SEMVER}
+
 WORKDIR /src
 COPY go.mod go.sum Makefile ./
 COPY pkg pkg/

@@ -10,8 +10,17 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+var (
+	// Semver holds the version exposed at api/version and passed via linker flag on CI.
+	Semver = "undefined"
+	// CommitSha holds the commit exposed at api/version and passed via linker flag on CI.
+	CommitSha = "undefined"
+)
+
 func main() {
-	cfg := &foxtrot.Config{}
+	cfg := &foxtrot.Config{
+		Version: foxtrot.Version{Semver: Semver, CommitSha: CommitSha},
+	}
 	kong.Parse(cfg, kong.Description("Foxtrot Server"))
 
 	mux := http.NewServeMux()

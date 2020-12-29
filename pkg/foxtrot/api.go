@@ -24,12 +24,14 @@ import (
 type api struct {
 	db   *db
 	auth *authenticator
+	ver  Version
 }
 
-func newAPI(db *db, auth *authenticator) *api {
+func newAPI(db *db, auth *authenticator, version Version) *api {
 	a := &api{
 		db:   db,
 		auth: auth,
+		ver:  version,
 	}
 	return a
 }
@@ -38,6 +40,7 @@ func (a *api) wireRoutes(basePath string, mux *http.ServeMux) {
 	mux.Handle(basePath+"/login", httpe.Must(httpe.Post, a.login))
 	mux.Handle(basePath+"/register", httpe.Must(httpe.Post, a.register))
 	mux.Handle(basePath+"/history", httpe.Must(httpe.Get, a.history))
+	mux.Handle(basePath+"/version", httpe.Must(httpe.Get, a.version))
 	mux.Handle(basePath+"/_test_cleanup", httpe.Must(httpe.Delete, a.testCleanup))
 }
 
@@ -93,6 +96,10 @@ func (a *api) history(w http.ResponseWriter, r *http.Request) error {
 		return httpe.ErrInternalServerError
 	}
 	return json.NewEncoder(w).Encode(messages)
+}
+
+func (a *api) version(w http.ResponseWriter, r *http.Request) error {
+	return json.NewEncoder(w).Encode(a.ver)
 }
 
 const testUser = "$user"

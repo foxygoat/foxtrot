@@ -46,4 +46,6 @@ jobs:
     - uses: crazy-max/ghaction-docker-buildx@v3
     - run: make docker-build-release
       env:
+        SEMVER: ${{ steps.bump_version.outputs.tag }}
+        COMMIT_SHA: ${GITHUB_SHA}
         DOCKER_TAG: ${{ steps.bump_version.outputs.tag }}

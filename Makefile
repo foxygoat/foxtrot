@@ -1,6 +1,8 @@
 # --- Global -------------------------------------------------------------------
 O = out
 COVERAGE = 91
+SEMVER ?= $(shell git describe --tags --dirty)
+COMMIT_SHA ?= $(shell git rev-parse --short HEAD)
 
 all: build test check-coverage lint  ## build, test, check coverage and lint
 	@if [ -e .git/rebase-merge ]; then git --no-pager log -1 --pretty='%h %s'; fi
@@ -12,12 +14,15 @@ clean::  ## Remove generated files
 .PHONY: all clean
 
 # --- Build --------------------------------------------------------------------
+GO_LDFLAGS = \
+	-X main.Semver=$(SEMVER) \
+	-X main.CommitSha=$(COMMIT_SHA)
 
 build: | $(O)  ## Build binaries of directories in ./cmd to out/
-	go build -o $(O) ./cmd/...
+	go build -o $(O) -ldflags='$(GO_LDFLAGS)' ./cmd/...
 
 install:  ## Build and install binaries in $GOBIN or $GOPATH/bin
-	go install ./cmd/...
+	go install -ldflags='$(GO_LDFLAGS)' ./cmd/...
 
 run: build  ## Run foxtrot server
 	$(O)/foxtrot
@@ -63,12 +68,15 @@ lint-with-docker:  ## Lint source code with docker image of golangci-lint
 
 # --- Docker -------------------------------------------------------------------
 DOCKER_TAG ?= $(error DOCKER_TAG not set)
+DOCKER_BUILD_ARGS = \
+	--build-arg=SEMVER=$(SEMVER) \
+	--build-arg=COMMIT_SHA=$(COMMIT_SHA)
 
 docker-build:
-	docker build --tag foxtrot:latest .
+	docker build $(DOCKER_BUILD_ARGS) --tag foxtrot:latest .
 
 docker-build-release:
-	docker buildx build \
+	docker buildx build $(DOCKER_BUILD_ARGS) \
 		--push \
 		--tag foxygoat/foxtrot:latest \
 		--tag foxygoat/foxtrot:$(DOCKER_TAG) \
