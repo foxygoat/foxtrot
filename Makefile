@@ -68,6 +68,7 @@ lint-with-docker:  ## Lint source code with docker image of golangci-lint
 
 # --- Docker -------------------------------------------------------------------
 DOCKER_TAG ?= $(error DOCKER_TAG not set)
+DOCKER_TAGS = $(DOCKER_TAG) $(if $(filter true,$(DOCKER_PUSH_LATEST)),latest)
 DOCKER_BUILD_ARGS = \
 	--build-arg=SEMVER=$(SEMVER) \
 	--build-arg=COMMIT_SHA=$(COMMIT_SHA)
@@ -78,8 +79,7 @@ docker-build:
 docker-build-release:
 	docker buildx build $(DOCKER_BUILD_ARGS) \
 		--push \
-		--tag foxygoat/foxtrot:latest \
-		--tag foxygoat/foxtrot:$(DOCKER_TAG) \
+		$(foreach tag,$(DOCKER_TAGS),--tag foxygoat/foxtrot:$(tag) ) \
 		--platform linux/amd64,linux/arm/v7 .
 
 docker-run: docker-build
