@@ -1,0 +1,1 @@
+(import 'foxtrot.jsonnet').configure
