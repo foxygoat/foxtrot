@@ -1,0 +1,91 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/setup-go@v2
+      with:
+        stable: false
+        go-version: 1.16.0-beta1
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    # Install golangci-lint, but run with --version so it does not run.
+    # We run it from the Makefile ourselves. It is installed so it does
+    # not depend on the version of Go in the docker image, which the
+    # Makefile will use if it is not installed.
+    - run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.33.2
+    - run: make
+    - run: make docker-test
+
+  release:
+    name: Release
+    needs: ci
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Bump version and push tag
+      id: bump_version
+      uses: anothrNick/github-tag-action@1.30.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: true
+        DEFAULT_BUMP: patch
+    # Create a release for frontpage visibility and downloading the tar
+    - name: Get commit message
+      run: git log --format=%B -n 1 HEAD > /tmp/commit-msg
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.bump_version.outputs.tag }}
+        release_name: Release ${{ steps.bump_version.outputs.tag }}
+        body_path: /tmp/commit-msg
+    # Get the latest module version so pkg.go.dev updates
+    - uses: actions/setup-go@v2
+      with:
+        go-version: 1.14
+    - name: Update pkg.go.dev
+      env:
+        GO111MODULE: on
+      working-directory: /tmp
+      run: go get foxygo.at/foxtrot@${{ steps.bump_version.outputs.tag }}
+
+  # Build and push images to Docker Hub
+  deploy:
+    name: Deploy
+    needs: release
+    if: always() && (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'deploy'))
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Make docker tag
+      id: make_tag
+      run: echo ::set-output name=docker_tag::$(git describe --tags --match 'v*' --exact-match 2>/dev/null || echo pr${{github.event.number}})
+      shell: bash
+    - uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Set up docker buildx
+      uses: crazy-max/ghaction-docker-buildx@v3
+    - run: make docker-build-release
+      env:
+        COMMIT_SHA: ${GITHUB_SHA}
+        DOCKER_TAG: ${{ steps.make_tag.outputs.docker_tag }}
+        DOCKER_PUSH_LATEST: ${{ github.event_name == 'push' }}
