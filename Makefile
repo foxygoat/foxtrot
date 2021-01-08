@@ -35,6 +35,12 @@ COVERFILE = $(O)/coverage.txt
 test: ## Run tests and generate a coverage file
 	go test -coverprofile=$(COVERFILE) ./...
 
+build-test: build  ## Run integration tests against a locally started foxtrot server
+	$(O)/foxtrot & \
+		pid=$$!; \
+		go test ./pkg/foxtrot --api-base-url http://localhost:8080; \
+		kill $$pid
+
 check-coverage: test  ## Check that test coverage meets the required level
 	@go tool cover -func=$(COVERFILE) | $(CHECK_COVERAGE) || $(FAIL_COVERAGE)
 
@@ -44,7 +50,7 @@ cover: test  ## Show test coverage in your browser
 CHECK_COVERAGE = awk -F '[ \t%]+' '/^total:/ {print; if ($$3 < $(COVERAGE)) exit 1}'
 FAIL_COVERAGE = { echo '$(COLOUR_RED)FAIL - Coverage below $(COVERAGE)%$(COLOUR_NORMAL)'; exit 1; }
 
-.PHONY: check-coverage cover test
+.PHONY: build-test check-coverage cover test
 
 # --- Lint ---------------------------------------------------------------------
 GOLINT_VERSION = 1.33.2
@@ -87,10 +93,12 @@ docker-run: docker-build
 
 docker-test: docker-build
 	docker run --rm --detach -p8083:8080 --name foxtrot-test foxtrot:latest
-	go test ./pkg/foxtrot --api-base-url http://localhost:8083
-	docker kill foxtrot-test
+	go test ./pkg/foxtrot --api-base-url http://localhost:8083; \
+		rc=$$?; \
+		docker kill foxtrot-test; \
+		exit $$rc
 
-.PHONY: docker-build docker-build-release
+.PHONY: docker-build docker-build-release docker-run docker-test
 
 # --- Utilities ----------------------------------------------------------------
 COLOUR_NORMAL = $(shell tput sgr0 2>/dev/null)
