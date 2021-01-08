@@ -1,6 +1,6 @@
 # Foxtrot
 
-![CI](https://github.com/foxygoat/foxtrot/workflows/ci/badge.svg?branch=master)
+[![CI/CD](https://github.com/foxygoat/foxtrot/workflows/CI/CD/badge.svg?branch=master)](https://github.com/foxygoat/foxtrot/actions?query=workflow%3ACI%2FCD+branch%3Amaster)
 [![PkgGoDev](https://pkg.go.dev/badge/mod/foxygo.at/foxtrot)](https://pkg.go.dev/mod/foxygo.at/foxtrot)
 [![Slack chat](https://img.shields.io/badge/slack-gophers-795679?logo=slack)](https://gophers.slack.com/messages/foxygoat)
 
