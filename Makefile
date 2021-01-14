@@ -101,9 +101,12 @@ docker-test: docker-build
 .PHONY: docker-build docker-build-release docker-run docker-test
 
 # --- Deployment -------------------------------------------------------------------
+LOCAL_OVERLAY = deployment/$*/overlay.jsonnet
+REMOTE_OVERLAY = https://github.com/foxygoat/foxtrot/raw/$(REF)/$(LOCAL_OVERLAY)
+OVERLAY = $(LOCAL_OVERLAY)
 TLA_ARGS = \
 	--tla-str docker_tag=$(DOCKER_TAG) \
-	--tla-code-file overlay=deployment/$*/overlay.jsonnet \
+	--tla-code-file overlay=$(OVERLAY) \
 	$(if $(DEPLOY_HOSTNAME), --tla-str hostname=$(DEPLOY_HOSTNAME))
 
 deploy-%: | deployment/% deployment/%/secret.json deployment/%/overlay.jsonnet  ## Generate and deploy k8s manifests
@@ -132,6 +135,16 @@ deployment/%/overlay.jsonnet:
 
 show-secret:  ## Show currently deployed foxtrot auth secret
 	kubectl get secret -n foxtrot foxtrot -o go-template='{{.data.authsecret | base64decode}}{{"\n"}}'
+
+PAYLOAD = \
+{ \
+	"command": "kubecfg update $(TLA_ARGS) https://github.com/foxygoat/foxtrot/raw/$(REF)/deployment/main.jsonnet", \
+	"apiKey": "$(JCDC_API_KEY)" \
+}
+
+jcdc-deploy-%: OVERLAY = $(REMOTE_OVERLAY)
+jcdc-deploy-%:
+	curl $(JCDC_URL) -d '$(PAYLOAD)'
 
 .PRECIOUS: deployment/% deployment/%/secret.json deployment/%/overlay.jsonnet
 .PHONY: show-secret

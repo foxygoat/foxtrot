@@ -91,3 +91,10 @@ jobs:
         COMMIT_SHA: ${GITHUB_SHA}
         DOCKER_TAG: ${{ steps.make_tag.outputs.docker_tag }}
         DOCKER_PUSH_LATEST: ${{ github.event_name == 'push' }}
+    - run: make jcdc-deploy-goat
+      if: github.event_name == 'push'
+      env:
+        REF: ${{ github.sha }}
+        JCDC_URL: https://jcdc.jul.run/run
+        JCDC_API_KEY: ${{ secrets.GOAT_JCDC_API_KEY }}
+        DOCKER_TAG: ${{ steps.make_tag.outputs.docker_tag }}
