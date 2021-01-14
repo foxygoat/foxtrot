@@ -19,7 +19,7 @@ var (
 
 func main() {
 	cfg := &foxtrot.Config{
-		Version: foxtrot.Version{Semver: Semver, CommitSha: CommitSha},
+		Version: foxtrot.Version{Semver: Semver, CommitSha: CommitSha, App: "foxtrot"},
 	}
 	kong.Parse(cfg, kong.Description("Foxtrot Server"))
 

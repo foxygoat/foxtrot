@@ -27,6 +27,7 @@ type APITestSuite struct {
 const (
 	testSemver    = "v0.0.0-test"
 	testCommitSha = "123456789abcdef"
+	testApp       = "testFoxtrot"
 )
 
 func (s *APITestSuite) SetupSuite() {
@@ -35,8 +36,12 @@ func (s *APITestSuite) SetupSuite() {
 	if s.baseURL == "" {
 		mux := http.NewServeMux()
 		cfg := &Config{
-			DSN:     ":memory:",
-			Version: Version{Semver: testSemver, CommitSha: testCommitSha},
+			DSN: ":memory:",
+			Version: Version{
+				App:       testApp,
+				CommitSha: testCommitSha,
+				Semver:    testSemver,
+			},
 		}
 		_, err := NewApp(cfg, mux)
 		require.NoError(t, err)
@@ -150,11 +155,13 @@ func (s *APITestSuite) TestVersion() {
 	require.NoError(t, err, body)
 	require.NotEmpty(t, version.Semver)
 	require.NotEmpty(t, version.CommitSha)
+	require.NotEmpty(t, version.App)
 	require.NotEqual(t, "undefined", version.CommitSha)
 	require.NotEqual(t, "undefined", version.Semver)
 	if s.server != nil {
 		require.Equal(t, testCommitSha, version.CommitSha)
 		require.Equal(t, testSemver, version.Semver)
+		require.Equal(t, testApp, version.App)
 	}
 }
 

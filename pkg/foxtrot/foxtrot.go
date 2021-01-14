@@ -20,6 +20,7 @@ type Config struct {
 // Version contains build version information which is returned as JSON
 // at the version HTTP endpoint.
 type Version struct {
+	App       string `json:"app"`
 	CommitSha string `json:"commitSha"`
 	Semver    string `json:"semver"`
 }

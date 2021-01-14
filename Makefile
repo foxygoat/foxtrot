@@ -100,6 +100,55 @@ docker-test: docker-build
 
 .PHONY: docker-build docker-build-release docker-run docker-test
 
+# --- Deployment -------------------------------------------------------------------
+LOCAL_OVERLAY = deployment/$*/overlay.jsonnet
+REMOTE_OVERLAY = https://github.com/foxygoat/foxtrot/raw/$(REF)/$(LOCAL_OVERLAY)
+OVERLAY = $(LOCAL_OVERLAY)
+TLA_ARGS = \
+	--tla-str docker_tag=$(DOCKER_TAG) \
+	--tla-code-file overlay=$(OVERLAY) \
+	$(if $(DEPLOY_HOSTNAME), --tla-str hostname=$(DEPLOY_HOSTNAME))
+
+deploy-%: | deployment/% deployment/%/secret.json deployment/%/overlay.jsonnet  ## Generate and deploy k8s manifests
+	kubecfg update $(TLA_ARGS) deployment/main.jsonnet
+
+show-deploy-%: | deployment/% deployment/%/secret.json deployment/%/overlay.jsonnet  ## Show k8s manifests that would be deployed
+	kubecfg show $(TLA_ARGS) deployment/main.jsonnet
+
+diff-deploy-%: ## Show diff of k8s manifests between files and deployed
+	kubecfg diff $(TLA_ARGS) deployment/main.jsonnet
+
+undeploy-%:  ## Delete deployment
+	kubecfg delete $(TLA_ARGS) deployment/main.jsonnet
+
+deployment/%:
+	mkdir $@
+
+deployment/%/secret.json:
+	kubectl create secret generic foxtrot -n foxtrot --from-literal=authsecret=$$(openssl rand -hex 32) --dry-run=client -o yaml | kubeseal -w $@
+
+deployment/%/overlay.jsonnet:
+	@printf '{ manifest+: [$$.sealedSecret], \n config+: { hostname: null // add your hostname \n }, \n sealedSecret:: import "secret.json"}' | jsonnetfmt -o $@ -
+	@printf '\ndefault overlay generated: %s \n' $@
+	@printf 'review and run `make deploy-$*` again.\n\n'
+	@exit 1
+
+show-secret:  ## Show currently deployed foxtrot auth secret
+	kubectl get secret -n foxtrot foxtrot -o go-template='{{.data.authsecret | base64decode}}{{"\n"}}'
+
+PAYLOAD = \
+{ \
+	"command": "kubecfg update $(TLA_ARGS) https://github.com/foxygoat/foxtrot/raw/$(REF)/deployment/main.jsonnet", \
+	"apiKey": "$(JCDC_API_KEY)" \
+}
+
+jcdc-deploy-%: OVERLAY = $(REMOTE_OVERLAY)
+jcdc-deploy-%:
+	curl $(JCDC_URL) -d '$(PAYLOAD)'
+
+.PRECIOUS: deployment/% deployment/%/secret.json deployment/%/overlay.jsonnet
+.PHONY: show-secret
+
 # --- Utilities ----------------------------------------------------------------
 COLOUR_NORMAL = $(shell tput sgr0 2>/dev/null)
 COLOUR_RED    = $(shell tput setaf 1 2>/dev/null)
@@ -107,7 +156,7 @@ COLOUR_GREEN  = $(shell tput setaf 2 2>/dev/null)
 COLOUR_WHITE  = $(shell tput setaf 7 2>/dev/null)
 
 help:
-	@awk -F ':.*## ' 'NF == 2 && $$1 ~ /^[A-Za-z0-9_-]+$$/ { printf "$(COLOUR_WHITE)%-30s$(COLOUR_NORMAL)%s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
+	@awk -F ':.*## ' 'NF == 2 && $$1 ~ /^[A-Za-z0-9%_-]+$$/ { printf "$(COLOUR_WHITE)%-30s$(COLOUR_NORMAL)%s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
 $(O):
 	@mkdir -p $@
