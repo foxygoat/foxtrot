@@ -107,7 +107,7 @@ COLOUR_GREEN  = $(shell tput setaf 2 2>/dev/null)
 COLOUR_WHITE  = $(shell tput setaf 7 2>/dev/null)
 
 help:
-	@awk -F ':.*## ' 'NF == 2 && $$1 ~ /^[A-Za-z0-9_-]+$$/ { printf "$(COLOUR_WHITE)%-30s$(COLOUR_NORMAL)%s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
+	@awk -F ':.*## ' 'NF == 2 && $$1 ~ /^[A-Za-z0-9%_-]+$$/ { printf "$(COLOUR_WHITE)%-30s$(COLOUR_NORMAL)%s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
 $(O):
 	@mkdir -p $@
