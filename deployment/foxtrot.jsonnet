@@ -63,7 +63,9 @@
         spec: {
           containers: [
             {
+              local policy(tag) = if tag == 'latest' || std.startsWith(tag, 'pr') then 'Always' else 'IfNotPresent',
               image: 'foxygoat/foxtrot:%s' % $.config.docker_tag,
+              imagePullPolicy: policy($.config.docker_tag),
               name: 'foxtrot',
               ports: [{ containerPort: 8080, name: 'http', protocol: 'TCP' }],
               env: [{
