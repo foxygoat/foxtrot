@@ -3,8 +3,8 @@
     hostname: null,
     docker_tag: 'latest',
   },
-  configure(hostname=null, docker_tag=null)::
-    self {
+  configure(overlay={}, hostname=null, docker_tag=null)::
+    self + overlay + {
       config+: std.prune({
         hostname: hostname,
         docker_tag: docker_tag,
@@ -66,6 +66,10 @@
               image: 'foxygoat/foxtrot:%s' % $.config.docker_tag,
               name: 'foxtrot',
               ports: [{ containerPort: 8080, name: 'http', protocol: 'TCP' }],
+              env: [{
+                name: 'FT_AUTH_SECRET',
+                valueFrom: { secretKeyRef: { key: 'authsecret', name: 'foxtrot' } },
+              }],
             },
           ],
         },
