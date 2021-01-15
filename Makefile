@@ -102,7 +102,7 @@ docker-test: docker-build
 
 # --- Deployment -------------------------------------------------------------------
 LOCAL_OVERLAY = deployment/$*/overlay.jsonnet
-REMOTE_OVERLAY = https://github.com/foxygoat/foxtrot/raw/$(REF)/$(LOCAL_OVERLAY)
+REMOTE_OVERLAY = https://github.com/foxygoat/foxtrot/raw/$(COMMIT_SHA)/$(LOCAL_OVERLAY)
 OVERLAY = $(LOCAL_OVERLAY)
 TLA_ARGS = \
 	--tla-str docker_tag=$(DOCKER_TAG) \
@@ -143,7 +143,7 @@ show-secret:  ## Show currently deployed foxtrot auth secret
 CURL_FLAGS = --silent --show-error --retry 3 --dump-header -
 JCDC_DEPLOY_PAYLOAD = \
 { \
-	"command": "kubecfg update $(TLA_ARGS) https://github.com/foxygoat/foxtrot/raw/$(REF)/deployment/main.jsonnet", \
+	"command": "kubecfg update $(TLA_ARGS) https://github.com/foxygoat/foxtrot/raw/$(COMMIT_SHA)/deployment/main.jsonnet", \
 	"apiKey": "$(JCDC_API_KEY)" \
 }
 jcdc-deploy-%: OVERLAY = $(REMOTE_OVERLAY)
@@ -152,7 +152,7 @@ jcdc-deploy-%:
 
 JCDC_UNDEPLOY_PAYLOAD = \
 { \
-	"command": "kubecfg delete $(TLA_ARGS) https://github.com/foxygoat/foxtrot/raw/$(REF)/deployment/main.jsonnet", \
+	"command": "kubecfg delete $(TLA_ARGS) https://github.com/foxygoat/foxtrot/raw/$(COMMIT_SHA)/deployment/main.jsonnet", \
 	"apiKey": "$(JCDC_API_KEY)" \
 }
 jcdc-undeploy-%: OVERLAY = $(REMOTE_OVERLAY)
