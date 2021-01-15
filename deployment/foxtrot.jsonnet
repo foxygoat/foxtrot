@@ -2,12 +2,18 @@
   config:: {
     hostname: null,
     docker_tag: 'latest',
+    dev: '',
+
+    // derived
+    nameSuffix: if self.dev != null then '-' + self.dev else '',
+    hostPrefix: if self.dev != null then self.dev + '.' else '',
   },
-  configure(overlay={}, hostname=null, docker_tag=null)::
+  configure(overlay={}, hostname=null, docker_tag=null, dev=null)::
     self + overlay + {
       config+: std.prune({
         hostname: hostname,
         docker_tag: docker_tag,
+        dev: dev,
       }),
     },
 
@@ -28,13 +34,18 @@
     apiVersion: 'v1',
     kind: 'Service',
     metadata: {
-      name: 'foxtrot',
       namespace: 'foxtrot',
+      name: 'foxtrot' + $.config.nameSuffix,
+      labels: {
+        app: 'foxtrot',
+        dev: $.config.dev,
+      },
     },
     spec: {
       ports: [{ name: 'http', port: 8080 }],
       selector: {
         app: 'foxtrot',
+        dev: $.config.dev,
       },
     },
   },
@@ -42,22 +53,25 @@
     apiVersion: 'apps/v1',
     kind: 'Deployment',
     metadata: {
+      namespace: 'foxtrot',
+      name: 'foxtrot' + $.config.nameSuffix,
       labels: {
         app: 'foxtrot',
+        dev: $.config.dev,
       },
-      name: 'foxtrot',
-      namespace: 'foxtrot',
     },
     spec: {
       selector: {
         matchLabels: {
           app: 'foxtrot',
+          dev: $.config.dev,
         },
       },
       template: {
         metadata: {
           labels: {
             app: 'foxtrot',
+            dev: $.config.dev,
           },
         },
         spec: {
@@ -82,23 +96,27 @@
     apiVersion: 'networking.k8s.io/v1',
     kind: 'Ingress',
     metadata: {
+      namespace: 'foxtrot',
+      name: 'foxtrot' + $.config.nameSuffix,
+      labels: {
+        app: 'foxtrot',
+        dev: $.config.dev,
+      },
       annotations: {
         'cert-manager.io/cluster-issuer': 'letsencrypt',
         'traefik.ingress.kubernetes.io/router.entrypoints': 'https',
       },
-      name: 'foxtrot',
-      namespace: 'foxtrot',
     },
     spec: {
       rules: [
         {
-          host: $.config.hostname,
+          host: $.config.hostPrefix + $.config.hostname,
           http: {
             paths: [
               {
                 backend: {
                   service: {
-                    name: 'foxtrot',
+                    name: 'foxtrot' + $.config.nameSuffix,
                     port: {
                       name: 'http',
                     },
@@ -113,8 +131,8 @@
       ],
       tls: [
         {
-          hosts: [$.config.hostname],
-          secretName: 'foxtrot-https-cert',
+          hosts: [$.config.hostPrefix + $.config.hostname],
+          secretName: 'foxtrot' + $.config.nameSuffix + '-https-cert',
         },
       ],
     },
