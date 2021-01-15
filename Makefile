@@ -115,7 +115,7 @@ show-deploy-%: | deployment/% deployment/%/secret.json deployment/%/overlay.json
 	kubecfg show $(TLA_ARGS) deployment/main.jsonnet
 
 diff-deploy-%: ## Show diff of k8s manifests between files and deployed
-	kubecfg diff $(TLA_ARGS) deployment/main.jsonnet
+	kubecfg diff --diff-strategy subset $(TLA_ARGS) deployment/main.jsonnet
 
 undeploy-%:  ## Delete deployment
 	kubecfg delete $(TLA_ARGS) deployment/main.jsonnet
