@@ -106,6 +106,7 @@ REMOTE_OVERLAY = https://github.com/foxygoat/foxtrot/raw/$(REF)/$(LOCAL_OVERLAY)
 OVERLAY = $(LOCAL_OVERLAY)
 TLA_ARGS = \
 	--tla-str docker_tag=$(DOCKER_TAG) \
+	$(if $(DEV), --tla-str dev=$(DEV)) \
 	--tla-code-file overlay=$(OVERLAY)
 
 deploy-%: | deployment/% deployment/%/secret.json deployment/%/overlay.jsonnet  ## Generate and deploy k8s manifests
@@ -115,7 +116,7 @@ show-deploy-%: | deployment/% deployment/%/secret.json deployment/%/overlay.json
 	kubecfg show $(TLA_ARGS) deployment/main.jsonnet
 
 diff-deploy-%: ## Show diff of k8s manifests between files and deployed
-	kubecfg diff $(TLA_ARGS) deployment/main.jsonnet
+	kubecfg diff --diff-strategy subset $(TLA_ARGS) deployment/main.jsonnet
 
 undeploy-%:  ## Delete deployment
 	kubecfg delete $(TLA_ARGS) deployment/main.jsonnet
@@ -135,18 +136,28 @@ deployment/%/overlay.jsonnet:
 show-secret:  ## Show currently deployed foxtrot auth secret
 	kubectl get secret -n foxtrot foxtrot -o go-template='{{.data.authsecret | base64decode}}{{"\n"}}'
 
-PAYLOAD = \
+.PRECIOUS: deployment/% deployment/%/secret.json deployment/%/overlay.jsonnet
+.PHONY: show-secret
+
+# --- JCDC --------------------------------------------------------------------
+CURL_FLAGS = --silent --show-error --retry 3 --dump-header -
+JCDC_DEPLOY_PAYLOAD = \
 { \
 	"command": "kubecfg update $(TLA_ARGS) https://github.com/foxygoat/foxtrot/raw/$(REF)/deployment/main.jsonnet", \
 	"apiKey": "$(JCDC_API_KEY)" \
 }
-
 jcdc-deploy-%: OVERLAY = $(REMOTE_OVERLAY)
 jcdc-deploy-%:
-	curl --data '$(PAYLOAD)' --silent --show-error --retry 3 --dump-header - '$(JCDC_URL)'
+	curl --data '$(JCDC_DEPLOY_PAYLOAD)' $(CURL_FLAGS) '$(JCDC_URL)'
 
-.PRECIOUS: deployment/% deployment/%/secret.json deployment/%/overlay.jsonnet
-.PHONY: show-secret
+JCDC_UNDEPLOY_PAYLOAD = \
+{ \
+	"command": "kubecfg delete $(TLA_ARGS) https://github.com/foxygoat/foxtrot/raw/$(REF)/deployment/main.jsonnet", \
+	"apiKey": "$(JCDC_API_KEY)" \
+}
+jcdc-undeploy-%: OVERLAY = $(REMOTE_OVERLAY)
+jcdc-undeploy-%:
+	curl --data '$(JCDC_UNDEPLOY_PAYLOAD)' $(CURL_FLAGS) '$(JCDC_URL)'
 
 # --- Utilities ----------------------------------------------------------------
 COLOUR_NORMAL = $(shell tput sgr0 2>/dev/null)
