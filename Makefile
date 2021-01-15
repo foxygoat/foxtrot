@@ -106,8 +106,7 @@ REMOTE_OVERLAY = https://github.com/foxygoat/foxtrot/raw/$(REF)/$(LOCAL_OVERLAY)
 OVERLAY = $(LOCAL_OVERLAY)
 TLA_ARGS = \
 	--tla-str docker_tag=$(DOCKER_TAG) \
-	--tla-code-file overlay=$(OVERLAY) \
-	$(if $(DEPLOY_HOSTNAME), --tla-str hostname=$(DEPLOY_HOSTNAME))
+	--tla-code-file overlay=$(OVERLAY)
 
 deploy-%: | deployment/% deployment/%/secret.json deployment/%/overlay.jsonnet  ## Generate and deploy k8s manifests
 	kubecfg update $(TLA_ARGS) deployment/main.jsonnet
@@ -144,7 +143,7 @@ PAYLOAD = \
 
 jcdc-deploy-%: OVERLAY = $(REMOTE_OVERLAY)
 jcdc-deploy-%:
-	curl $(JCDC_URL) -d '$(PAYLOAD)'
+	curl --data '$(PAYLOAD)' --silent --show-error --retry 3 --dump-header - '$(JCDC_URL)'
 
 .PRECIOUS: deployment/% deployment/%/secret.json deployment/%/overlay.jsonnet
 .PHONY: show-secret
