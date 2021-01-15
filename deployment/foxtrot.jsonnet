@@ -3,17 +3,19 @@
     hostname: null,
     docker_tag: 'latest',
     dev: '',
+    commit_sha: '',
 
     // derived
     nameSuffix: if self.dev != '' then '-' + self.dev else '',
     hostPrefix: if self.dev != '' then self.dev + '.' else '',
   },
-  configure(overlay={}, hostname=null, docker_tag=null, dev=null)::
+  configure(overlay={}, hostname=null, docker_tag=null, dev=null, commit_sha=null)::
     self + overlay + {
       config+: std.prune({
         hostname: hostname,
         docker_tag: docker_tag,
         dev: dev,
+        commit_sha: commit_sha,
       }),
     },
 
@@ -72,6 +74,9 @@
           labels: {
             app: 'foxtrot',
             dev: $.config.dev,
+          },
+          annotations: {
+            commit_sha: $.config.commit_sha,
           },
         },
         spec: {

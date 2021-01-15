@@ -106,6 +106,7 @@ REMOTE_OVERLAY = https://github.com/foxygoat/foxtrot/raw/$(COMMIT_SHA)/$(LOCAL_O
 OVERLAY = $(LOCAL_OVERLAY)
 TLA_ARGS = \
 	--tla-str docker_tag=$(DOCKER_TAG) \
+	--tla-str commit_sha=$(COMMIT_SHA) \
 	$(if $(DEV), --tla-str dev=$(DEV)) \
 	--tla-code-file overlay=$(OVERLAY)
 
