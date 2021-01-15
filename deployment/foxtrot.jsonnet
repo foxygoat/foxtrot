@@ -5,8 +5,8 @@
     dev: '',
 
     // derived
-    nameSuffix: if self.dev != null then '-' + self.dev else '',
-    hostPrefix: if self.dev != null then self.dev + '.' else '',
+    nameSuffix: if self.dev != '' then '-' + self.dev else '',
+    hostPrefix: if self.dev != '' then self.dev + '.' else '',
   },
   configure(overlay={}, hostname=null, docker_tag=null, dev=null)::
     self + overlay + {
