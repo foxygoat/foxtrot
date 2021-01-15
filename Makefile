@@ -106,6 +106,7 @@ REMOTE_OVERLAY = https://github.com/foxygoat/foxtrot/raw/$(REF)/$(LOCAL_OVERLAY)
 OVERLAY = $(LOCAL_OVERLAY)
 TLA_ARGS = \
 	--tla-str docker_tag=$(DOCKER_TAG) \
+	$(if $(DEV), --tla-str dev=$(DEV)) \
 	--tla-code-file overlay=$(OVERLAY)
 
 deploy-%: | deployment/% deployment/%/secret.json deployment/%/overlay.jsonnet  ## Generate and deploy k8s manifests
