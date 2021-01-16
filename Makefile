@@ -73,7 +73,7 @@ lint-with-docker:  ## Lint source code with docker image of golangci-lint
 .PHONY: lint lint-with-local lint-with-docker
 
 # --- Docker -------------------------------------------------------------------
-DOCKER_TAG ?= $(error DOCKER_TAG not set)
+DOCKER_TAG ?= $(or $(DEV),$(error DOCKER_TAG not set))
 DOCKER_TAGS = $(DOCKER_TAG) $(if $(filter true,$(DOCKER_PUSH_LATEST)),latest)
 DOCKER_BUILD_ARGS = \
 	--build-arg=SEMVER=$(SEMVER) \
@@ -102,10 +102,11 @@ docker-test: docker-build
 
 # --- Deployment -------------------------------------------------------------------
 LOCAL_OVERLAY = deployment/$*/overlay.jsonnet
-REMOTE_OVERLAY = https://github.com/foxygoat/foxtrot/raw/$(REF)/$(LOCAL_OVERLAY)
+REMOTE_OVERLAY = https://github.com/foxygoat/foxtrot/raw/$(COMMIT_SHA)/$(LOCAL_OVERLAY)
 OVERLAY = $(LOCAL_OVERLAY)
 TLA_ARGS = \
 	--tla-str docker_tag=$(DOCKER_TAG) \
+	--tla-str commit_sha=$(COMMIT_SHA) \
 	$(if $(DEV), --tla-str dev=$(DEV)) \
 	--tla-code-file overlay=$(OVERLAY)
 
@@ -120,6 +121,10 @@ diff-deploy-%: ## Show diff of k8s manifests between files and deployed
 
 undeploy-%:  ## Delete deployment
 	kubecfg delete $(TLA_ARGS) deployment/main.jsonnet
+
+dev-undeploy-%:  ## Delete dev deployment
+	kubectl delete all -n foxtrot -l app=foxtrot,dev=$(DEV)
+	kubectl delete ingress -n foxtrot -l app=foxtrot,dev=$(DEV)
 
 deployment/%:
 	mkdir $@
@@ -143,7 +148,7 @@ show-secret:  ## Show currently deployed foxtrot auth secret
 CURL_FLAGS = --silent --show-error --retry 3 --dump-header -
 JCDC_DEPLOY_PAYLOAD = \
 { \
-	"command": "kubecfg update $(TLA_ARGS) https://github.com/foxygoat/foxtrot/raw/$(REF)/deployment/main.jsonnet", \
+	"command": "kubecfg update $(TLA_ARGS) https://github.com/foxygoat/foxtrot/raw/$(COMMIT_SHA)/deployment/main.jsonnet", \
 	"apiKey": "$(JCDC_API_KEY)" \
 }
 jcdc-deploy-%: OVERLAY = $(REMOTE_OVERLAY)
@@ -152,7 +157,7 @@ jcdc-deploy-%:
 
 JCDC_UNDEPLOY_PAYLOAD = \
 { \
-	"command": "kubecfg delete $(TLA_ARGS) https://github.com/foxygoat/foxtrot/raw/$(REF)/deployment/main.jsonnet", \
+	"command": "kubecfg delete $(TLA_ARGS) https://github.com/foxygoat/foxtrot/raw/$(COMMIT_SHA)/deployment/main.jsonnet", \
 	"apiKey": "$(JCDC_API_KEY)" \
 }
 jcdc-undeploy-%: OVERLAY = $(REMOTE_OVERLAY)
