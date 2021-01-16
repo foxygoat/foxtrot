@@ -73,7 +73,7 @@ lint-with-docker:  ## Lint source code with docker image of golangci-lint
 .PHONY: lint lint-with-local lint-with-docker
 
 # --- Docker -------------------------------------------------------------------
-DOCKER_TAG ?= $(error DOCKER_TAG not set)
+DOCKER_TAG ?= $(or $(DEV),$(error DOCKER_TAG not set))
 DOCKER_TAGS = $(DOCKER_TAG) $(if $(filter true,$(DOCKER_PUSH_LATEST)),latest)
 DOCKER_BUILD_ARGS = \
 	--build-arg=SEMVER=$(SEMVER) \
