@@ -122,6 +122,10 @@ diff-deploy-%: ## Show diff of k8s manifests between files and deployed
 undeploy-%:  ## Delete deployment
 	kubecfg delete $(TLA_ARGS) deployment/main.jsonnet
 
+dev-undeploy-%:  ## Delete dev deployment
+	kubectl delete all -n foxtrot -l app=foxtrot,dev=$(DEV)
+	kubectl delete ingress -n foxtrot -l app=foxtrot,dev=$(DEV)
+
 deployment/%:
 	mkdir $@
 
