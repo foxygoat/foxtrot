@@ -7,8 +7,8 @@ on:
     branches: [ master ]
 
 jobs:
-  ci:
-    name: CI
+  backend:
+    name: Backend CI
     runs-on: ubuntu-latest
     steps:
     - uses: actions/setup-go@v2
@@ -18,17 +18,30 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
-    # Install golangci-lint, but run with --version so it does not run.
-    # We run it from the Makefile ourselves. It is installed so it does
-    # not depend on the version of Go in the docker image, which the
-    # Makefile will use if it is not installed.
     - run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.33.2
     - run: make
     - run: make docker-test
 
+  frontend:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '15'
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - run: npm install
+    - run: npm run check-format
+    - run: npm run build
+
   release:
     name: Release
-    needs: ci
+    needs: [backend, frontend]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
