@@ -56,7 +56,21 @@ Alternatively, create a persistent DB with
       '.read pkg/foxtrot/sql/schema.sql' \
       '.read pkg/foxtrot/sql/sample_data.sql'
 
-### Docker
+## Frontend
+
+The frontend is a SPA built with SvelteJS.
+
+### Development
+
+All frontend code and build tools are contained in `frontend/`. To work with it
+first `cd frontend`
+
+- Pre-requisites: [node v15.5](https://nodejs.org/)GNU make
+- Initialise with `npm install`
+- Develop with `npm run dev`
+- Build with `npm build` and view output with `npm run start`
+
+## Docker
 
 On every successful merge to `master` on GitHub, the Semver patch
 version number is bumped and used as git tag. Additionally
