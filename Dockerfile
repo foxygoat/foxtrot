@@ -11,8 +11,16 @@ COPY pkg pkg/
 COPY cmd cmd/
 RUN make install
 
+FROM node:15.5-alpine3.10 AS frontend-builder
+
+WORKDIR /src/frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm install
+COPY frontend ./
+RUN npm run build
+
 FROM debian:buster-20201209
-WORKDIR /app
-COPY --from=builder /go/bin/foxtrot .
-COPY static static/
+WORKDIR /
+COPY --from=builder /go/bin/foxtrot /app/
+COPY --from=frontend-builder /src/frontend/public /frontend/public/
 CMD /app/foxtrot

@@ -24,7 +24,7 @@ func main() {
 	kong.Parse(cfg, kong.Description("Foxtrot Server"))
 
 	mux := http.NewServeMux()
-	mux.Handle("/", http.FileServer(http.Dir("static")))
+	mux.Handle("/", http.FileServer(http.Dir("frontend/public")))
 	if _, err := foxtrot.NewApp(cfg, mux); err != nil {
 		log.Fatal(err)
 	}
