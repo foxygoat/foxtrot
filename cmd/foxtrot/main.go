@@ -71,6 +71,7 @@ func (w *responseWriter) WriteHeader(code int) {
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin:     func(r *http.Request) bool { return true }, // allow CORS requests
 }
 
 // socketHandler echos websocket messages back to the client.

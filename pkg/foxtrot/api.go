@@ -36,12 +36,16 @@ func newAPI(db *db, auth *authenticator, version Version) *api {
 	return a
 }
 
+func allowCors(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 func (a *api) wireRoutes(basePath string, mux *http.ServeMux) {
-	mux.Handle(basePath+"/login", httpe.Must(httpe.Post, a.login))
-	mux.Handle(basePath+"/register", httpe.Must(httpe.Post, a.register))
-	mux.Handle(basePath+"/history", httpe.Must(httpe.Get, a.history))
-	mux.Handle(basePath+"/version", httpe.Must(httpe.Get, a.version))
-	mux.Handle(basePath+"/_test_cleanup", httpe.Must(httpe.Delete, a.testCleanup))
+	mux.Handle(basePath+"/login", httpe.Must(httpe.Post, allowCors, a.login))
+	mux.Handle(basePath+"/register", httpe.Must(httpe.Post, allowCors, a.register))
+	mux.Handle(basePath+"/history", httpe.Must(httpe.Get, allowCors, a.history))
+	mux.Handle(basePath+"/version", httpe.Must(httpe.Get, allowCors, a.version))
+	mux.Handle(basePath+"/_test_cleanup", httpe.Must(httpe.Delete, allowCors, a.testCleanup))
 }
 
 type creds struct {
