@@ -1,5 +1,5 @@
 {
-  manifest+: [$.sealedSecret],
+  manifest+: [if self.config.dev == '' then $.sealedSecret],
   config+: {
     hostname: 'foxtrot.jul.run',
   },
