@@ -20,7 +20,7 @@
     },
 
   manifest: [
-    $.namespace,
+    if $.config.dev == '' then $.namespace,
     $.service,
     $.deployment,
     if $.config.hostname != null then $.ingress,
