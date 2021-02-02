@@ -101,26 +101,39 @@ docker-test: docker-build
 .PHONY: docker-build docker-build-release docker-run docker-test
 
 # --- Deployment -------------------------------------------------------------------
+LOCAL_MAIN = deployment/main.jsonnet
 LOCAL_OVERLAY = deployment/$*/overlay.jsonnet
-REMOTE_OVERLAY = https://github.com/foxygoat/foxtrot/raw/$(COMMIT_SHA)/$(LOCAL_OVERLAY)
-OVERLAY = $(LOCAL_OVERLAY)
+
+REMOTE_BASE = https://github.com/foxygoat/foxtrot/raw/$(COMMIT_SHA)
+REMOTE_MAIN = $(REMOTE_BASE)/$(LOCAL_MAIN)
+REMOTE_OVERLAY = $(REMOTE_BASE)/$(LOCAL_OVERLAY)
+
+SOURCE = LOCAL
+MAIN = $($(SOURCE)_MAIN)
+OVERLAY = $($(SOURCE)_OVERLAY)
+
 TLA_ARGS = \
 	--tla-str docker_tag=$(DOCKER_TAG) \
 	--tla-str commit_sha=$(COMMIT_SHA) \
 	$(if $(DEV), --tla-str dev=$(DEV)) \
 	--tla-code-file overlay=$(OVERLAY)
 
+KUBECFG_DEPLOY = kubecfg update $(TLA_ARGS) $(MAIN)
+KUBECFG_SHOW = kubecfg show $(TLA_ARGS) $(MAIN)
+KUBECFG_DIFF = kubecfg diff --diff-strategy subset $(TLA_ARGS) $(MAIN)
+KUBECFG_UNDEPLOY = kubecfg delete $(TLA_ARGS) $(MAIN)
+
 deploy-%: | deployment/% deployment/%/secret.json deployment/%/overlay.jsonnet  ## Generate and deploy k8s manifests
-	kubecfg update $(TLA_ARGS) deployment/main.jsonnet
+	$(KUBECFG_DEPLOY)
 
 show-deploy-%: | deployment/% deployment/%/secret.json deployment/%/overlay.jsonnet  ## Show k8s manifests that would be deployed
-	kubecfg show $(TLA_ARGS) deployment/main.jsonnet
+	$(KUBECFG_SHOW)
 
 diff-deploy-%: ## Show diff of k8s manifests between files and deployed
-	kubecfg diff --diff-strategy subset $(TLA_ARGS) deployment/main.jsonnet
+	$(KUBECFG_DIFF)
 
 undeploy-%:  ## Delete deployment
-	kubecfg delete $(TLA_ARGS) deployment/main.jsonnet
+	$(KUBECFG_UNDEPLOY)
 
 deployment/%:
 	mkdir $@
@@ -142,23 +155,18 @@ show-secret:  ## Show currently deployed foxtrot auth secret
 
 # --- JCDC --------------------------------------------------------------------
 CURL_FLAGS = --silent --show-error --retry 3 --dump-header -
-JCDC_DEPLOY_PAYLOAD = \
-{ \
-	"command": "kubecfg update $(TLA_ARGS) https://github.com/foxygoat/foxtrot/raw/$(COMMIT_SHA)/deployment/main.jsonnet", \
-	"apiKey": "$(JCDC_API_KEY)" \
-}
-jcdc-deploy-%: OVERLAY = $(REMOTE_OVERLAY)
-jcdc-deploy-%:
-	curl --data '$(JCDC_DEPLOY_PAYLOAD)' $(CURL_FLAGS) '$(JCDC_URL)'
+JCDC_PAYLOAD = { "command": "$(JCDC_COMMAND)", "apiKey": "$(JCDC_API_KEY)" }
+JCDC_RUN = curl $(CURL_FLAGS) --data '$(JCDC_PAYLOAD)' '$(JCDC_URL)'
 
-JCDC_UNDEPLOY_PAYLOAD = \
-{ \
-	"command": "kubecfg delete $(TLA_ARGS) https://github.com/foxygoat/foxtrot/raw/$(COMMIT_SHA)/deployment/main.jsonnet", \
-	"apiKey": "$(JCDC_API_KEY)" \
-}
-jcdc-undeploy-%: OVERLAY = $(REMOTE_OVERLAY)
+jcdc-deploy-%: SOURCE = REMOTE
+jcdc-deploy-%: JCDC_COMMAND = $(KUBECFG_DEPLOY)
+jcdc-deploy-%:
+	$(JCDC_RUN)
+
+jcdc-undeploy-%: SOURCE = REMOTE
+jcdc-undeploy-%: JCDC_COMMAND = $(KUBECFG_UNDEPLOY)
 jcdc-undeploy-%:
-	curl --data '$(JCDC_UNDEPLOY_PAYLOAD)' $(CURL_FLAGS) '$(JCDC_URL)'
+	$(JCDC_RUN)
 
 # --- Utilities ----------------------------------------------------------------
 COLOUR_NORMAL = $(shell tput sgr0 2>/dev/null)
